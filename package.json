@@ -1,0 +1,16 @@
+{
+  "name": "testing-bot",
+  "version": "1.0.0",
+  "description": "discord.js api learn",
+  "main": "index.js",
+  "scripts": {
+    "start": "nodemon index.js"
+  },
+  "author": "praveen",
+  "license": "ISC",
+  "dependencies": {
+    "discord.js": "^13.6.0",
+    "dotenv": "^14.2.0",
+    "nodemon": "^2.0.15"
+  }
+}
