@@ -1,6 +1,7 @@
 const { Client, Intents, Collection } = require("discord.js");
 require("dotenv").config();
 const fs = require("fs");
+const cli = require("nodemon/lib/cli");
 
 const client = new Client({
   intents: [
@@ -13,10 +14,12 @@ const client = new Client({
 
 client.commands = new Collection();
 
-const PREFIX = ".";
-
 const commandFiles = fs
   .readdirSync("./commands")
+  .filter((file) => file.endsWith(".js"));
+
+const eventFiles = fs
+  .readdirSync("./events")
   .filter((file) => file.endsWith(".js"));
 
 for (const file of commandFiles) {
@@ -24,25 +27,16 @@ for (const file of commandFiles) {
   client.commands.set(command.name, command);
 }
 
-client.once("ready", () => {
-  console.log("Bot is online!🤖");
-});
+for (const event of eventFiles) {
+  const eventFile = require(`./events/` + event);
 
-client.on("messageCreate", (message) => {
-  if (message.author.bot) return;
-  if (message.content.indexOf(PREFIX) !== 0) return;
-
-  const args = message.content.slice(PREFIX.length).trim().split(/ +/);
-  const command = args.shift().toLowerCase();
-  if (!client.commands.has(command)) return;
-  try {
-    client.commands.get(command).execute(client, message, args);
-  } catch (error) {
-    message.reply(
-      `There was an error trying to execute that command! ${error}`
+  if (eventFile.once) {
+    client.once(eventFile.name, (...args) =>
+      eventFile.execute(...args, client)
     );
-    console.error(error);
+  } else {
+    client.on(eventFile.name, (...args) => eventFile.execute(...args, client));
   }
+}
 
-  client.login(process.env.TOKEN.toString());
-});
+client.login(process.env.TOKEN.toString());
